@@ -531,7 +531,7 @@ bool8 TryHandleLaunchBattleTableAnimation(u8 activeBattler, u8 atkBattler, u8 de
 
 static void Task_ClearBitWhenBattleTableAnimDone(u8 taskId)
 {
-    gAnimScriptCallback();
+    RunBattleAnimScriptCallback();
     if (!gAnimScriptActive)
     {
         gBattleSpritesDataPtr->healthBoxesData[gTasks[taskId].tBattlerId].animFromTableActive = 0;
@@ -580,7 +580,7 @@ void InitAndLaunchSpecialAnimation(enum BattlerId activeBattler, enum BattlerId 
 
 static void Task_ClearBitWhenSpecialAnimDone(u8 taskId)
 {
-    gAnimScriptCallback();
+    RunBattleAnimScriptCallback();
     if (!gAnimScriptActive)
     {
         gBattleSpritesDataPtr->healthBoxesData[gTasks[taskId].tBattlerId].specialAnimActive = 0;

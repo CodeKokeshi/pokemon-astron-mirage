@@ -197,11 +197,18 @@ static u8 GetMainCallbackRunsPerFrame(void)
         [OPTIONS_FAST_FORWARD_1_5X] = 6,
         [OPTIONS_FAST_FORWARD_2X] = 8,
     };
+    bool8 isOverworldCallback;
     u8 option;
     u8 runs;
 
-    if (!gSaveBlock2Ptr->optionsFastForwardEnabled)
+    isOverworldCallback = (gMain.callback2 == CB2_Overworld || gMain.callback2 == CB2_OverworldBasic);
+
+    // Keep non-overworld callbacks (menus, battle, cutscenes) at 1x to avoid desyncing state machines.
+    if (!gSaveBlock2Ptr->optionsFastForwardEnabled || gMain.inBattle || !isOverworldCallback)
+    {
+        sFastForwardRunAccumulator = 0;
         return 1;
+    }
 
     option = gSaveBlock2Ptr->optionsFastForward;
     if (option >= OPTIONS_FAST_FORWARD_COUNT)

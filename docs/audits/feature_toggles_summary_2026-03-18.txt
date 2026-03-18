@@ -1,0 +1,13 @@
+Feature toggle scan date: 2026-03-18 (post-enable pass)
+
+Totals including test.h -> TRUE: 644, FALSE: 126
+Totals excluding test.h -> TRUE: 86, FALSE: 124
+
+Recently enabled in this pass:
+DEXNAV_ENABLED (dexnav.h:4) = TRUE
+I_REUSABLE_TMS (item.h:26) = TRUE
+OW_FOLLOWERS_ENABLED (overworld.h:61) = TRUE
+OW_TIME_OF_DAY_ENCOUNTERS (overworld.h:95) = TRUE
+P_ENABLE_MOVE_RELEARNERS (summary_screen.h:33) = TRUE
+P_SUMMARY_SCREEN_IV_EV_INFO (summary_screen.h:9) = TRUE
+POKEDEX_PLUS_HGSS (pokedex_plus_hgss.h:4) = TRUE

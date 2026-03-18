@@ -82,6 +82,7 @@ extern u16 gAnimMoveIndex;
 void ClearBattleAnimationVars(void);
 void DoMoveAnim(enum Move move);
 void LaunchBattleAnimation(u32 animType, u32 animId);
+void RunBattleAnimScriptCallback(void);
 void DestroyAnimSprite(struct Sprite *sprite);
 void DestroyAnimVisualTask(u8 taskId);
 void DestroyAnimSoundTask(u8 taskId);

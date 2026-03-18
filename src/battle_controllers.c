@@ -2121,7 +2121,7 @@ static void Controller_DoMoveAnimation(enum BattlerId battler)
         }
         break;
     case 2:
-        gAnimScriptCallback();
+        RunBattleAnimScriptCallback();
         if (!gAnimScriptActive)
         {
             u8 multihit = gBattleResources->bufferA[battler][11];

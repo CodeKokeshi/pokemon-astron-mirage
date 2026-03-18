@@ -100,6 +100,7 @@ static void LoadDefaultBg(void);
 EWRAM_DATA static const u8 *sBattleAnimScriptPtr = NULL;
 EWRAM_DATA static const u8 *sBattleAnimScriptRetAddr = NULL;
 EWRAM_DATA void (*gAnimScriptCallback)(void) = NULL;
+EWRAM_DATA static u8 sAnimFastForwardRunAccumulator = 0;
 EWRAM_DATA static s8 sAnimFramesToWait = 0;
 EWRAM_DATA bool8 gAnimScriptActive = FALSE;
 EWRAM_DATA u8 gAnimVisualTaskCount = 0;
@@ -283,6 +284,7 @@ void ClearBattleAnimationVars(void)
 {
     s32 i;
 
+    sAnimFastForwardRunAccumulator = 0;
     sAnimFramesToWait = 0;
     gAnimScriptActive = FALSE;
     gAnimVisualTaskCount = 0;
@@ -308,6 +310,54 @@ void ClearBattleAnimationVars(void)
     gBattleAnimAttacker = 0;
     gBattleAnimTarget = 0;
     gAnimCustomPanning = 0;
+}
+
+static u8 GetBattleAnimCallbackRunsPerFrame(void)
+{
+    static const u8 sFastForwardStepPerFrame[OPTIONS_FAST_FORWARD_COUNT] =
+    {
+        [OPTIONS_FAST_FORWARD_1_25X] = 5,
+        [OPTIONS_FAST_FORWARD_1_5X] = 6,
+        [OPTIONS_FAST_FORWARD_2X] = 8,
+    };
+    u8 option;
+    u8 runs;
+
+    if (!gMain.inBattle || !gSaveBlock2Ptr->optionsFastForwardEnabled)
+    {
+        sAnimFastForwardRunAccumulator = 0;
+        return 1;
+    }
+
+    option = gSaveBlock2Ptr->optionsFastForward;
+    if (option >= OPTIONS_FAST_FORWARD_COUNT)
+        option = OPTIONS_FAST_FORWARD_1_25X;
+
+    sAnimFastForwardRunAccumulator += sFastForwardStepPerFrame[option];
+    runs = sAnimFastForwardRunAccumulator / 4;
+    sAnimFastForwardRunAccumulator %= 4;
+
+    if (runs == 0)
+        runs = 1;
+
+    return runs;
+}
+
+void RunBattleAnimScriptCallback(void)
+{
+    u8 i;
+    u8 runs;
+
+    if (gAnimScriptCallback == NULL)
+        return;
+
+    runs = GetBattleAnimCallbackRunsPerFrame();
+    for (i = 0; i < runs; i++)
+    {
+        gAnimScriptCallback();
+        if (!gAnimScriptActive)
+            break;
+    }
 }
 
 void DoMoveAnim(enum Move move)
