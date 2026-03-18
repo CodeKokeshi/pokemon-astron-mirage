@@ -191,7 +191,6 @@ void AgbMainLoop(void)
 
 static u8 GetMainCallbackRunsPerFrame(void)
 {
-    // 4/4 = 1x baseline. Higher values run callbacks more often without changing audio/VBlank cadence.
     static const u8 sFastForwardStepPerFrame[OPTIONS_FAST_FORWARD_COUNT] =
     {
         [OPTIONS_FAST_FORWARD_1_25X] = 5,
