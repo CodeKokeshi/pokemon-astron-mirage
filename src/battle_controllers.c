@@ -2436,7 +2436,7 @@ void BtlController_HandleDrawTrainerPic(enum BattlerId battler, enum TrainerPicI
 
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].oam.paletteNum = IndexOfSpritePaletteTag(gTrainerSprites[trainerPicId].palette.tag);
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].x2 = -DISPLAY_WIDTH;
-        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].sSpeedX = 2;
+        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].sSpeedX = 6;
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].oam.affineParam = trainerPicId;
     }
     else // Player's side
@@ -2475,7 +2475,7 @@ void BtlController_HandleDrawTrainerPic(enum BattlerId battler, enum TrainerPicI
             gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].oam.paletteNum = IndexOfSpritePaletteTag(gTrainerBacksprites[trainerPicId].palette.tag);
         }
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].x2 = DISPLAY_WIDTH;
-        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].sSpeedX = -2;
+        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].sSpeedX = -6;
     }
     if (B_FAST_INTRO_NO_SLIDE || gTestRunnerHeadless)
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].callback = SpriteCB_TrainerSpawn;
@@ -2501,7 +2501,7 @@ void BtlController_HandleTrainerSlide(enum BattlerId battler, enum TrainerPicID 
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].oam.priority = 1;
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].oam.paletteNum = IndexOfSpritePaletteTag(gTrainerBacksprites[trainerPicId].palette.tag);
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].x2 = -96;
-        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].sSpeedX = 2;
+        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].sSpeedX = 6;
     }
     else
     {
@@ -2512,7 +2512,7 @@ void BtlController_HandleTrainerSlide(enum BattlerId battler, enum TrainerPicID 
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].oam.paletteNum = IndexOfSpritePaletteTag(gTrainerSprites[trainerPicId].palette.tag);
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].x2 = 96;
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].x += 32;
-        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].sSpeedX = -2;
+        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].sSpeedX = -6;
     }
     gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].callback = SpriteCB_TrainerSlideIn;
 
@@ -2524,6 +2524,7 @@ void BtlController_HandleTrainerSlide(enum BattlerId battler, enum TrainerPicID 
 void BtlController_HandleTrainerSlideBack(enum BattlerId battler, s16 data0, bool32 startAnim)
 {
     SetSpritePrimaryCoordsFromSecondaryCoords(&gSprites[gBattleStruct->trainerSlideSpriteIds[battler]]);
+    data0 = max(1, data0 / 3);
     gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].data[0] = data0;
     gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].data[2] = IsOnPlayerSide(battler) ? -40 : 280;
     gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].data[4] = gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].y;
@@ -2854,12 +2855,12 @@ void BtlController_HandleIntroTrainerBallThrow(enum BattlerId battler, u16 tagTr
     SetSpritePrimaryCoordsFromSecondaryCoords(&gSprites[gBattleStruct->trainerSlideSpriteIds[battler]]);
     if (side == B_SIDE_PLAYER)
     {
-        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].data[0] = 50;
+        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].data[0] = 16;
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].data[2] = -40;
     }
     else
     {
-        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].data[0] = 35;
+        gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].data[0] = 12;
         gSprites[gBattleStruct->trainerSlideSpriteIds[battler]].data[2] = 280;
     }
 
@@ -2879,7 +2880,7 @@ void BtlController_HandleIntroTrainerBallThrow(enum BattlerId battler, u16 tagTr
 
     taskId = CreateTask(Task_StartSendOutAnim, 5);
     gTasks[taskId].tBattlerId = battler;
-    gTasks[taskId].tFramesToWait = framesToWait;
+    gTasks[taskId].tFramesToWait = max(1, framesToWait / 3);
     SetWordTaskArg(taskId, tControllerFunc_1, (uint32_t)(controllerCallback));
 
     if (gBattleSpritesDataPtr->healthBoxesData[battler].partyStatusSummaryShown)

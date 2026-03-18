@@ -101,6 +101,8 @@ EWRAM_DATA static const u8 *sBattleAnimScriptPtr = NULL;
 EWRAM_DATA static const u8 *sBattleAnimScriptRetAddr = NULL;
 EWRAM_DATA void (*gAnimScriptCallback)(void) = NULL;
 EWRAM_DATA static u8 sAnimFastForwardRunAccumulator = 0;
+EWRAM_DATA static u8 sCurrentAnimType = ANIM_TYPE_GENERAL;
+EWRAM_DATA static u16 sCurrentAnimId = 0;
 EWRAM_DATA static s8 sAnimFramesToWait = 0;
 EWRAM_DATA bool8 gAnimScriptActive = FALSE;
 EWRAM_DATA u8 gAnimVisualTaskCount = 0;
@@ -285,6 +287,8 @@ void ClearBattleAnimationVars(void)
     s32 i;
 
     sAnimFastForwardRunAccumulator = 0;
+    sCurrentAnimType = ANIM_TYPE_GENERAL;
+    sCurrentAnimId = 0;
     sAnimFramesToWait = 0;
     gAnimScriptActive = FALSE;
     gAnimVisualTaskCount = 0;
@@ -312,13 +316,31 @@ void ClearBattleAnimationVars(void)
     gAnimCustomPanning = 0;
 }
 
-static u8 GetBattleAnimCallbackRunsPerFrame(void)
+static bool8 ShouldUseFastDefaultBattleAnimSpeed(void)
+{
+    if (sCurrentAnimType != ANIM_TYPE_SPECIAL)
+        return FALSE;
+
+    switch (sCurrentAnimId)
+    {
+    case B_ANIM_SWITCH_OUT_PLAYER_MON:
+    case B_ANIM_SWITCH_OUT_OPPONENT_MON:
+    case B_ANIM_BALL_THROW:
+    case B_ANIM_BALL_THROW_WITH_TRAINER:
+    case B_ANIM_CRITICAL_CAPTURE_THROW:
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static u8 GetBattleAnimFastForwardRunsPerFrame(void)
 {
     static const u8 sFastForwardStepPerFrame[OPTIONS_FAST_FORWARD_COUNT] =
     {
-        [OPTIONS_FAST_FORWARD_1_25X] = 5,
-        [OPTIONS_FAST_FORWARD_1_5X] = 6,
-        [OPTIONS_FAST_FORWARD_2X] = 8,
+        [OPTIONS_FAST_FORWARD_1_25X] = 8,
+        [OPTIONS_FAST_FORWARD_1_5X] = 10,
+        [OPTIONS_FAST_FORWARD_2X] = 12,
     };
     u8 option;
     u8 runs;
@@ -339,6 +361,16 @@ static u8 GetBattleAnimCallbackRunsPerFrame(void)
 
     if (runs == 0)
         runs = 1;
+
+    return runs;
+}
+
+static u8 GetBattleAnimCallbackRunsPerFrame(void)
+{
+    u8 runs = GetBattleAnimFastForwardRunsPerFrame();
+
+    if (ShouldUseFastDefaultBattleAnimSpeed())
+        runs = max(runs, 3);
 
     return runs;
 }
@@ -401,6 +433,8 @@ void LaunchBattleAnimation(u32 animType, u32 animId)
     }
 
     sAnimHideHpBoxes = !(animType == ANIM_TYPE_MOVE && animId == MOVE_TRANSFORM);
+    sCurrentAnimType = animType;
+    sCurrentAnimId = animId;
     if (animType != ANIM_TYPE_MOVE)
     {
         switch (animId)

@@ -453,7 +453,7 @@ void SpriteCB_TrainerSpawn(struct Sprite *sprite)
 // Slide up to 0 if necessary (used by multi battle intro)
 static void SpriteCB_TrainerSlideVertical(struct Sprite *sprite)
 {
-    sprite->y2 -= 2;
+    sprite->y2 -= 4;
     if (sprite->y2 == 0)
         sprite->callback = SpriteCallbackDummy;
 }

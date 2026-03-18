@@ -1331,7 +1331,7 @@ void StartHealthboxSlideIn(enum BattlerId battler)
 {
     struct Sprite *healthboxSprite = &gSprites[gHealthboxSpriteIds[battler]];
 
-    healthboxSprite->sSpeedX = 5;
+    healthboxSprite->sSpeedX = 10;
     healthboxSprite->sSpeedY = 0;
     healthboxSprite->x2 = 0x73;
     healthboxSprite->y2 = 0;
@@ -1351,7 +1351,7 @@ void StartHealthboxSlideIn(enum BattlerId battler)
 static void SpriteCB_HealthboxSlideInDelayed(struct Sprite *sprite)
 {
     sprite->sDelayTimer++;
-    if (sprite->sDelayTimer == 20)
+    if (sprite->sDelayTimer == 8)
     {
         sprite->sDelayTimer = 0;
         sprite->callback = SpriteCB_HealthboxSlideIn;
@@ -1360,9 +1360,26 @@ static void SpriteCB_HealthboxSlideInDelayed(struct Sprite *sprite)
 
 static void SpriteCB_HealthboxSlideIn(struct Sprite *sprite)
 {
+    bool32 reachedX = FALSE;
+    bool32 reachedY = FALSE;
+
     sprite->x2 -= sprite->sSpeedX;
     sprite->y2 -= sprite->sSpeedY;
-    if (sprite->x2 == 0 && sprite->y2 == 0)
+
+    // Speeds may not divide the start offset exactly; clamp once we cross zero.
+    if ((sprite->sSpeedX > 0 && sprite->x2 <= 0) || (sprite->sSpeedX < 0 && sprite->x2 >= 0) || sprite->sSpeedX == 0)
+    {
+        sprite->x2 = 0;
+        reachedX = TRUE;
+    }
+
+    if ((sprite->sSpeedY > 0 && sprite->y2 <= 0) || (sprite->sSpeedY < 0 && sprite->y2 >= 0) || sprite->sSpeedY == 0)
+    {
+        sprite->y2 = 0;
+        reachedY = TRUE;
+    }
+
+    if (reachedX && reachedY)
         sprite->callback = SpriteCallbackDummy;
 }
 

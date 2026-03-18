@@ -193,9 +193,9 @@ static u8 GetMainCallbackRunsPerFrame(void)
 {
     static const u8 sFastForwardStepPerFrame[OPTIONS_FAST_FORWARD_COUNT] =
     {
-        [OPTIONS_FAST_FORWARD_1_25X] = 5,
-        [OPTIONS_FAST_FORWARD_1_5X] = 6,
-        [OPTIONS_FAST_FORWARD_2X] = 8,
+        [OPTIONS_FAST_FORWARD_1_25X] = 8,
+        [OPTIONS_FAST_FORWARD_1_5X] = 10,
+        [OPTIONS_FAST_FORWARD_2X] = 12,
     };
     bool8 isOverworldCallback;
     u8 option;
