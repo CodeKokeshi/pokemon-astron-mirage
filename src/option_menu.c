@@ -24,8 +24,9 @@
 #define tButtonMode data[5]
 #define tWindowFrameType data[6]
 #define tFastForward data[7]
+#define tFastForwardToggle data[8]
 
-#define MENUITEM_HEIGHT 14
+#define MENUITEM_HEIGHT 12
 
 enum
 {
@@ -35,6 +36,7 @@ enum
     MENUITEM_SOUND,
     MENUITEM_BUTTONMODE,
     MENUITEM_FRAMETYPE,
+    MENUITEM_FASTFORWARDTOGGLE,
     MENUITEM_FASTFORWARD,
     MENUITEM_CANCEL,
     MENUITEM_COUNT,
@@ -52,6 +54,7 @@ enum
 #define YPOS_SOUND        (MENUITEM_SOUND * MENUITEM_HEIGHT)
 #define YPOS_BUTTONMODE   (MENUITEM_BUTTONMODE * MENUITEM_HEIGHT)
 #define YPOS_FRAMETYPE    (MENUITEM_FRAMETYPE * MENUITEM_HEIGHT)
+#define YPOS_FASTFORWARDTOGGLE  (MENUITEM_FASTFORWARDTOGGLE * MENUITEM_HEIGHT)
 #define YPOS_FASTFORWARD  (MENUITEM_FASTFORWARD * MENUITEM_HEIGHT)
 
 static void Task_OptionMenuFadeIn(u8 taskId);
@@ -71,6 +74,8 @@ static u8 FrameType_ProcessInput(u8 selection);
 static void FrameType_DrawChoices(u8 selection);
 static u8 ButtonMode_ProcessInput(u8 selection);
 static void ButtonMode_DrawChoices(u8 selection);
+static u8 FastForwardToggle_ProcessInput(u8 selection);
+static void FastForwardToggle_DrawChoices(u8 selection);
 static u8 FastForward_ProcessInput(u8 selection);
 static void FastForward_DrawChoices(u8 selection);
 static void DrawHeaderText(void);
@@ -110,7 +115,8 @@ static const u8 *const sOptionMenuItemsNames[MENUITEM_COUNT] =
     [MENUITEM_SOUND]       = COMPOUND_STRING("SOUND"),
     [MENUITEM_BUTTONMODE]  = COMPOUND_STRING("BUTTON MODE"),
     [MENUITEM_FRAMETYPE]   = COMPOUND_STRING("FRAME"),
-    [MENUITEM_FASTFORWARD] = COMPOUND_STRING("FAST FORWARD"),
+    [MENUITEM_FASTFORWARDTOGGLE] = COMPOUND_STRING("FAST FORWARD"),
+    [MENUITEM_FASTFORWARD] = COMPOUND_STRING("FAST SPEED"),
     [MENUITEM_CANCEL]      = COMPOUND_STRING("CANCEL"),
 };
 
@@ -261,7 +267,10 @@ void CB2_InitOptionMenu(void)
         gTasks[taskId].tSound = gSaveBlock2Ptr->optionsSound;
         gTasks[taskId].tButtonMode = gSaveBlock2Ptr->optionsButtonMode;
         gTasks[taskId].tWindowFrameType = gSaveBlock2Ptr->optionsWindowFrameType;
+        gTasks[taskId].tFastForwardToggle = gSaveBlock2Ptr->optionsFastForwardEnabled;
         gTasks[taskId].tFastForward = gSaveBlock2Ptr->optionsFastForward;
+        if (gTasks[taskId].tFastForwardToggle > TRUE)
+            gTasks[taskId].tFastForwardToggle = TRUE;
         if (gTasks[taskId].tFastForward >= OPTIONS_FAST_FORWARD_COUNT)
             gTasks[taskId].tFastForward = OPTIONS_FAST_FORWARD_1_25X;
 
@@ -271,6 +280,7 @@ void CB2_InitOptionMenu(void)
         Sound_DrawChoices(gTasks[taskId].tSound);
         ButtonMode_DrawChoices(gTasks[taskId].tButtonMode);
         FrameType_DrawChoices(gTasks[taskId].tWindowFrameType);
+        FastForwardToggle_DrawChoices(gTasks[taskId].tFastForwardToggle);
         FastForward_DrawChoices(gTasks[taskId].tFastForward);
         HighlightOptionMenuItem(gTasks[taskId].tMenuSelection);
 
@@ -367,6 +377,13 @@ static void Task_OptionMenuProcessInput(u8 taskId)
             if (previousOption != gTasks[taskId].tWindowFrameType)
                 FrameType_DrawChoices(gTasks[taskId].tWindowFrameType);
             break;
+        case MENUITEM_FASTFORWARDTOGGLE:
+            previousOption = gTasks[taskId].tFastForwardToggle;
+            gTasks[taskId].tFastForwardToggle = FastForwardToggle_ProcessInput(gTasks[taskId].tFastForwardToggle);
+
+            if (previousOption != gTasks[taskId].tFastForwardToggle)
+                FastForwardToggle_DrawChoices(gTasks[taskId].tFastForwardToggle);
+            break;
         case MENUITEM_FASTFORWARD:
             previousOption = gTasks[taskId].tFastForward;
             gTasks[taskId].tFastForward = FastForward_ProcessInput(gTasks[taskId].tFastForward);
@@ -394,6 +411,7 @@ static void Task_OptionMenuSave(u8 taskId)
     gSaveBlock2Ptr->optionsSound = gTasks[taskId].tSound;
     gSaveBlock2Ptr->optionsButtonMode = gTasks[taskId].tButtonMode;
     gSaveBlock2Ptr->optionsWindowFrameType = gTasks[taskId].tWindowFrameType;
+    gSaveBlock2Ptr->optionsFastForwardEnabled = gTasks[taskId].tFastForwardToggle;
     gSaveBlock2Ptr->optionsFastForward = gTasks[taskId].tFastForward;
 
     BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
@@ -629,6 +647,30 @@ static u8 ButtonMode_ProcessInput(u8 selection)
         sArrowPressed = TRUE;
     }
     return selection;
+}
+
+static u8 FastForwardToggle_ProcessInput(u8 selection)
+{
+    if (JOY_NEW(DPAD_LEFT | DPAD_RIGHT))
+    {
+        selection ^= TRUE;
+        sArrowPressed = TRUE;
+    }
+
+    return selection;
+}
+
+static void FastForwardToggle_DrawChoices(u8 selection)
+{
+    u8 styles[2] = {0};
+
+    if (selection > TRUE)
+        selection = TRUE;
+
+    styles[selection] = 1;
+
+    DrawOptionMenuChoice(gText_BattleSceneOff, 104, YPOS_FASTFORWARDTOGGLE, styles[0]);
+    DrawOptionMenuChoice(gText_BattleSceneOn, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleSceneOn, 198), YPOS_FASTFORWARDTOGGLE, styles[1]);
 }
 
 static u8 FastForward_ProcessInput(u8 selection)

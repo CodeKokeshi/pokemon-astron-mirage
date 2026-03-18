@@ -599,7 +599,8 @@ struct SaveBlock2
              u16 optionsBattleSceneOff:1; // whether battle animations are disabled
              u16 regionMapZoom:1; // whether the map is zoomed in
              u16 optionsFastForward:2; // OPTIONS_FAST_FORWARD_[1_25X/1_5X/2X]
-             //u16 padding1:2;
+             u16 optionsFastForwardEnabled:1; // FALSE: off, TRUE: on
+             //u16 padding1:1;
              //u16 padding2;
     /*0x18*/ struct Pokedex pokedex;
     /*0x90*/ u8 filler_90[0x8];

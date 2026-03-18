@@ -154,6 +154,13 @@ void AgbMainLoop(void)
         callbackRuns = GetMainCallbackRunsPerFrame();
         for (i = 0; i < callbackRuns; i++)
         {
+            if (i != 0)
+            {
+                // Avoid consuming one-shot button presses multiple times in the same frame.
+                gMain.newKeys = 0;
+                gMain.newAndRepeatedKeys = 0;
+            }
+
             if (Overworld_SendKeysToLinkIsRunning() == TRUE)
             {
                 gLinkTransferringData = TRUE;
@@ -193,6 +200,9 @@ static u8 GetMainCallbackRunsPerFrame(void)
     };
     u8 option;
     u8 runs;
+
+    if (!gSaveBlock2Ptr->optionsFastForwardEnabled)
+        return 1;
 
     option = gSaveBlock2Ptr->optionsFastForward;
     if (option >= OPTIONS_FAST_FORWARD_COUNT)
