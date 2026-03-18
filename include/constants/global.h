@@ -200,6 +200,11 @@ enum Gender
 #define OPTIONS_BATTLE_STYLE_SHIFT 0
 #define OPTIONS_BATTLE_STYLE_SET 1
 
+#define OPTIONS_FAST_FORWARD_1_25X 0
+#define OPTIONS_FAST_FORWARD_1_5X  1
+#define OPTIONS_FAST_FORWARD_2X    2
+#define OPTIONS_FAST_FORWARD_COUNT 3
+
 enum __attribute__((packed)) Direction
 {
     DIR_NONE,

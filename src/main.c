@@ -73,12 +73,14 @@ COMMON_DATA s8 gPcmDmaCounter = 0;
 COMMON_DATA void *gAgbMainLoop_sp = NULL;
 
 static EWRAM_DATA u16 sTrainerId = 0;
+static EWRAM_DATA u8 sFastForwardRunAccumulator = 0;
 
 //EWRAM_DATA void (**gFlashTimerIntrFunc)(void) = NULL;
 
 static void UpdateLinkAndCallCallbacks(void);
 static void InitMainCallbacks(void);
 static void CallCallbacks(void);
+static u8 GetMainCallbackRunsPerFrame(void);
 #ifdef BUGFIX
 static void SeedRngWithRtc(void);
 #endif
@@ -135,6 +137,9 @@ void AgbMainLoop(void)
 {
     for (;;)
     {
+        u8 i;
+        u8 callbackRuns;
+
         ReadKeys();
 
         if (gSoftResetDisabled == FALSE
@@ -146,24 +151,28 @@ void AgbMainLoop(void)
             DoSoftReset();
         }
 
-        if (Overworld_SendKeysToLinkIsRunning() == TRUE)
+        callbackRuns = GetMainCallbackRunsPerFrame();
+        for (i = 0; i < callbackRuns; i++)
         {
-            gLinkTransferringData = TRUE;
-            UpdateLinkAndCallCallbacks();
-            gLinkTransferringData = FALSE;
-        }
-        else
-        {
-            gLinkTransferringData = FALSE;
-            UpdateLinkAndCallCallbacks();
-
-            if (Overworld_RecvKeysFromLinkIsRunning() == TRUE)
+            if (Overworld_SendKeysToLinkIsRunning() == TRUE)
             {
-                gMain.newKeys = 0;
-                ClearSpriteCopyRequests();
                 gLinkTransferringData = TRUE;
                 UpdateLinkAndCallCallbacks();
                 gLinkTransferringData = FALSE;
+            }
+            else
+            {
+                gLinkTransferringData = FALSE;
+                UpdateLinkAndCallCallbacks();
+
+                if (Overworld_RecvKeysFromLinkIsRunning() == TRUE)
+                {
+                    gMain.newKeys = 0;
+                    ClearSpriteCopyRequests();
+                    gLinkTransferringData = TRUE;
+                    UpdateLinkAndCallCallbacks();
+                    gLinkTransferringData = FALSE;
+                }
             }
         }
 
@@ -171,6 +180,32 @@ void AgbMainLoop(void)
         MapMusicMain();
         WaitForVBlank();
     }
+}
+
+static u8 GetMainCallbackRunsPerFrame(void)
+{
+    // 4/4 = 1x baseline. Higher values run callbacks more often without changing audio/VBlank cadence.
+    static const u8 sFastForwardStepPerFrame[OPTIONS_FAST_FORWARD_COUNT] =
+    {
+        [OPTIONS_FAST_FORWARD_1_25X] = 5,
+        [OPTIONS_FAST_FORWARD_1_5X] = 6,
+        [OPTIONS_FAST_FORWARD_2X] = 8,
+    };
+    u8 option;
+    u8 runs;
+
+    option = gSaveBlock2Ptr->optionsFastForward;
+    if (option >= OPTIONS_FAST_FORWARD_COUNT)
+        option = OPTIONS_FAST_FORWARD_1_25X;
+
+    sFastForwardRunAccumulator += sFastForwardStepPerFrame[option];
+    runs = sFastForwardRunAccumulator / 4;
+    sFastForwardRunAccumulator %= 4;
+
+    if (runs == 0)
+        runs = 1;
+
+    return runs;
 }
 
 static void UpdateLinkAndCallCallbacks(void)

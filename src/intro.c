@@ -1150,6 +1150,19 @@ void CB2_InitCopyrightScreenAfterBootup(void)
     }
 }
 
+void CB2_InitBootSkipToTitleScreen(void)
+{
+    SetSaveBlocksPointers(GetSaveBlocksPointersBaseOffset());
+    ResetMenuAndMonGlobals();
+    Save_ResetSaveCounters();
+    LoadGameSave(SAVE_NORMAL);
+    if (gSaveFileStatus == SAVE_STATUS_EMPTY || gSaveFileStatus == SAVE_STATUS_CORRUPT)
+        Sav2_ClearSetDefault();
+    SetPokemonCryStereo(gSaveBlock2Ptr->optionsSound);
+    InitHeap(gHeap, HEAP_SIZE);
+    SetMainCallback2(CB2_InitTitleScreen);
+}
+
 void CB2_InitCopyrightScreenAfterTitleScreen(void)
 {
     SetUpCopyrightScreen();
