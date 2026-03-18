@@ -27,6 +27,7 @@
 #define tFastForwardToggle data[8]
 
 #define MENUITEM_HEIGHT 12
+#define OPTION_MENU_FONT FONT_SMALL_NARROW
 
 enum
 {
@@ -431,7 +432,7 @@ static void Task_OptionMenuFadeOut(u8 taskId)
 static void HighlightOptionMenuItem(u8 index)
 {
     SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(16, DISPLAY_WIDTH - 16));
-    SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(index * MENUITEM_HEIGHT + 40, index * MENUITEM_HEIGHT + 40 + MENUITEM_HEIGHT));
+    SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(index * MENUITEM_HEIGHT + 42, index * MENUITEM_HEIGHT + 42 + MENUITEM_HEIGHT - 1));
 }
 
 static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style)
@@ -449,7 +450,7 @@ static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style)
     }
 
     dst[i] = EOS;
-    AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, dst, x, y + 1, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(WIN_OPTIONS, OPTION_MENU_FONT, dst, x, y + 2, TEXT_SKIP_DRAW, NULL);
 }
 
 static u8 TextSpeed_ProcessInput(u8 selection)
@@ -487,15 +488,15 @@ static void TextSpeed_DrawChoices(u8 selection)
 
     DrawOptionMenuChoice(gText_TextSpeedSlow, 104, YPOS_TEXTSPEED, styles[0]);
 
-    widthSlow = GetStringWidth(FONT_NORMAL, gText_TextSpeedSlow, 0);
-    widthMid = GetStringWidth(FONT_NORMAL, gText_TextSpeedMid, 0);
-    widthFast = GetStringWidth(FONT_NORMAL, gText_TextSpeedFast, 0);
+    widthSlow = GetStringWidth(OPTION_MENU_FONT, gText_TextSpeedSlow, 0);
+    widthMid = GetStringWidth(OPTION_MENU_FONT, gText_TextSpeedMid, 0);
+    widthFast = GetStringWidth(OPTION_MENU_FONT, gText_TextSpeedFast, 0);
 
     widthMid -= 94;
     xMid = (widthSlow - widthMid - widthFast) / 2 + 104;
     DrawOptionMenuChoice(gText_TextSpeedMid, xMid, YPOS_TEXTSPEED, styles[1]);
 
-    DrawOptionMenuChoice(gText_TextSpeedFast, GetStringRightAlignXOffset(FONT_NORMAL, gText_TextSpeedFast, 198), YPOS_TEXTSPEED, styles[2]);
+    DrawOptionMenuChoice(gText_TextSpeedFast, GetStringRightAlignXOffset(OPTION_MENU_FONT, gText_TextSpeedFast, 198), YPOS_TEXTSPEED, styles[2]);
 }
 
 static u8 BattleScene_ProcessInput(u8 selection)
@@ -518,7 +519,7 @@ static void BattleScene_DrawChoices(u8 selection)
     styles[selection] = 1;
 
     DrawOptionMenuChoice(gText_BattleSceneOn, 104, YPOS_BATTLESCENE, styles[0]);
-    DrawOptionMenuChoice(gText_BattleSceneOff, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleSceneOff, 198), YPOS_BATTLESCENE, styles[1]);
+    DrawOptionMenuChoice(gText_BattleSceneOff, GetStringRightAlignXOffset(OPTION_MENU_FONT, gText_BattleSceneOff, 198), YPOS_BATTLESCENE, styles[1]);
 }
 
 static u8 BattleStyle_ProcessInput(u8 selection)
@@ -541,7 +542,7 @@ static void BattleStyle_DrawChoices(u8 selection)
     styles[selection] = 1;
 
     DrawOptionMenuChoice(gText_BattleStyleShift, 104, YPOS_BATTLESTYLE, styles[0]);
-    DrawOptionMenuChoice(gText_BattleStyleSet, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleStyleSet, 198), YPOS_BATTLESTYLE, styles[1]);
+    DrawOptionMenuChoice(gText_BattleStyleSet, GetStringRightAlignXOffset(OPTION_MENU_FONT, gText_BattleStyleSet, 198), YPOS_BATTLESTYLE, styles[1]);
 }
 
 static u8 Sound_ProcessInput(u8 selection)
@@ -565,7 +566,7 @@ static void Sound_DrawChoices(u8 selection)
     styles[selection] = 1;
 
     DrawOptionMenuChoice(gText_SoundMono, 104, YPOS_SOUND, styles[0]);
-    DrawOptionMenuChoice(gText_SoundStereo, GetStringRightAlignXOffset(FONT_NORMAL, gText_SoundStereo, 198), YPOS_SOUND, styles[1]);
+    DrawOptionMenuChoice(gText_SoundStereo, GetStringRightAlignXOffset(OPTION_MENU_FONT, gText_SoundStereo, 198), YPOS_SOUND, styles[1]);
 }
 
 static u8 FrameType_ProcessInput(u8 selection)
@@ -670,7 +671,7 @@ static void FastForwardToggle_DrawChoices(u8 selection)
     styles[selection] = 1;
 
     DrawOptionMenuChoice(gText_BattleSceneOff, 104, YPOS_FASTFORWARDTOGGLE, styles[0]);
-    DrawOptionMenuChoice(gText_BattleSceneOn, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleSceneOn, 198), YPOS_FASTFORWARDTOGGLE, styles[1]);
+    DrawOptionMenuChoice(gText_BattleSceneOn, GetStringRightAlignXOffset(OPTION_MENU_FONT, gText_BattleSceneOn, 198), YPOS_FASTFORWARDTOGGLE, styles[1]);
 }
 
 static u8 FastForward_ProcessInput(u8 selection)
@@ -709,15 +710,15 @@ static void FastForward_DrawChoices(u8 selection)
 
     DrawOptionMenuChoice(gText_FastForward125, 104, YPOS_FASTFORWARD, styles[0]);
 
-    width125 = GetStringWidth(FONT_NORMAL, gText_FastForward125, 0);
-    width150 = GetStringWidth(FONT_NORMAL, gText_FastForward150, 0);
-    width200 = GetStringWidth(FONT_NORMAL, gText_FastForward200, 0);
+    width125 = GetStringWidth(OPTION_MENU_FONT, gText_FastForward125, 0);
+    width150 = GetStringWidth(OPTION_MENU_FONT, gText_FastForward150, 0);
+    width200 = GetStringWidth(OPTION_MENU_FONT, gText_FastForward200, 0);
 
     width150 -= 94;
     x150 = (width125 - width150 - width200) / 2 + 104;
     DrawOptionMenuChoice(gText_FastForward150, x150, YPOS_FASTFORWARD, styles[1]);
 
-    DrawOptionMenuChoice(gText_FastForward200, GetStringRightAlignXOffset(FONT_NORMAL, gText_FastForward200, 198), YPOS_FASTFORWARD, styles[2]);
+    DrawOptionMenuChoice(gText_FastForward200, GetStringRightAlignXOffset(OPTION_MENU_FONT, gText_FastForward200, 198), YPOS_FASTFORWARD, styles[2]);
 }
 
 static void ButtonMode_DrawChoices(u8 selection)
@@ -732,15 +733,15 @@ static void ButtonMode_DrawChoices(u8 selection)
 
     DrawOptionMenuChoice(gText_ButtonTypeNormal, 104, YPOS_BUTTONMODE, styles[0]);
 
-    widthNormal = GetStringWidth(FONT_NORMAL, gText_ButtonTypeNormal, 0);
-    widthLR = GetStringWidth(FONT_NORMAL, gText_ButtonTypeLR, 0);
-    widthLA = GetStringWidth(FONT_NORMAL, gText_ButtonTypeLEqualsA, 0);
+    widthNormal = GetStringWidth(OPTION_MENU_FONT, gText_ButtonTypeNormal, 0);
+    widthLR = GetStringWidth(OPTION_MENU_FONT, gText_ButtonTypeLR, 0);
+    widthLA = GetStringWidth(OPTION_MENU_FONT, gText_ButtonTypeLEqualsA, 0);
 
     widthLR -= 94;
     xLR = (widthNormal - widthLR - widthLA) / 2 + 104;
     DrawOptionMenuChoice(gText_ButtonTypeLR, xLR, YPOS_BUTTONMODE, styles[1]);
 
-    DrawOptionMenuChoice(gText_ButtonTypeLEqualsA, GetStringRightAlignXOffset(FONT_NORMAL, gText_ButtonTypeLEqualsA, 198), YPOS_BUTTONMODE, styles[2]);
+    DrawOptionMenuChoice(gText_ButtonTypeLEqualsA, GetStringRightAlignXOffset(OPTION_MENU_FONT, gText_ButtonTypeLEqualsA, 198), YPOS_BUTTONMODE, styles[2]);
 }
 
 static void DrawHeaderText(void)
@@ -756,7 +757,7 @@ static void DrawOptionMenuTexts(void)
 
     FillWindowPixelBuffer(WIN_OPTIONS, PIXEL_FILL(1));
     for (i = 0; i < MENUITEM_COUNT; i++)
-        AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, sOptionMenuItemsNames[i], 8, (i * MENUITEM_HEIGHT) + 1, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(WIN_OPTIONS, OPTION_MENU_FONT, sOptionMenuItemsNames[i], 8, (i * MENUITEM_HEIGHT) + 2, TEXT_SKIP_DRAW, NULL);
     CopyWindowToVram(WIN_OPTIONS, COPYWIN_FULL);
 }
 
