@@ -191,6 +191,7 @@ static bool8 MapLdr_Credits(void);
 static void CameraCB_CreditsPan(struct CameraObject *camera);
 static void Task_OvwldCredits_FadeOut(u8 taskId);
 static void Task_OvwldCredits_WaitFade(u8 taskId);
+static void TryAutoHealFaintedPartyMons(void);
 
 static void *sUnusedOverworldCallback;
 static u8 sPlayerLinkStates[MAX_LINK_PLAYERS];
@@ -231,6 +232,7 @@ EWRAM_DATA bool8 gDisableMapMusicChangeOnMapLoad = MUSIC_DISABLE_OFF;
 static EWRAM_DATA const struct CreditsOverworldCmd *sCreditsOverworld_Script = NULL;
 static EWRAM_DATA s16 sCreditsOverworld_CmdLength = 0;
 static EWRAM_DATA s16 sCreditsOverworld_CmdIndex = 0;
+static EWRAM_DATA u16 sFaintedAutoHealFrameCounter = 0;
 
 static const struct WarpData sDummyWarpData =
 {
@@ -1792,6 +1794,7 @@ static void OverworldBasic(void)
 {
     ScriptContext_RunScript();
     RunTasks();
+    TryAutoHealFaintedPartyMons();
     AnimateSprites();
     CameraUpdate();
     UpdateCameraPanning();
@@ -1816,6 +1819,55 @@ static void OverworldBasic(void)
             ApplyWeatherColorMapIfIdle(gWeatherPtr->colorMapIndex);
         }
     }
+}
+
+static void TryAutoHealFaintedPartyMons(void)
+{
+#if OW_FAINTED_AUTOHEAL
+    u8 i;
+
+    if (++sFaintedAutoHealFrameCounter < OW_FAINTED_AUTOHEAL_TICK_FRAMES)
+        return;
+
+    sFaintedAutoHealFrameCounter = 0;
+    for (i = 0; i < PARTY_SIZE; i++)
+    {
+        u16 hp;
+        u16 maxHp;
+        u16 autoHealCap;
+        u16 healPerTick;
+
+        if (!GetMonData(&gPlayerParty[i], MON_DATA_SANITY_HAS_SPECIES)
+         || GetMonData(&gPlayerParty[i], MON_DATA_SANITY_IS_EGG))
+            continue;
+
+        hp = GetMonData(&gPlayerParty[i], MON_DATA_HP);
+        maxHp = GetMonData(&gPlayerParty[i], MON_DATA_MAX_HP);
+        autoHealCap = (maxHp * OW_FAINTED_AUTOHEAL_MAX_PERCENT) / 100;
+        healPerTick = (maxHp * OW_FAINTED_AUTOHEAL_TICK_PERCENT) / 100;
+        if (autoHealCap == 0)
+            autoHealCap = 1;
+        if (healPerTick == 0)
+            healPerTick = 1;
+
+        if (hp == 0)
+        {
+            hp = healPerTick;
+            if (hp > autoHealCap)
+                hp = autoHealCap;
+            SetMonData(&gPlayerParty[i], MON_DATA_HP, &hp);
+        }
+        else if (hp < autoHealCap)
+        {
+            u32 newHp = hp + healPerTick;
+            if (newHp > autoHealCap)
+                hp = autoHealCap;
+            else
+                hp = newHp;
+            SetMonData(&gPlayerParty[i], MON_DATA_HP, &hp);
+        }
+    }
+#endif
 }
 
 // This CB2 is used when starting

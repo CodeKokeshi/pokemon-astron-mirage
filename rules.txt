@@ -1,6 +1,7 @@
 For AI
 1. We're working with C so ensure that when removing other stuff or editing. Ensure that core stuff like initializing, reserving and removing wasn't hit to ensure no crashes from memory errors.
 2. Do not build here, we're using WSL2 to do it.
+3. Ensure that no memory address issue (typical of C) will occur.
 
 For me:
 cd /mnt/d/OS2025Dev/PokemonDecomp/pokeemerald-expansion

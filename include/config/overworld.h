@@ -13,6 +13,10 @@
 #define OW_DEFOG_FIELD_MOVE             FALSE      // If enabled, Defog can be used as a Field Move as seen in DPPt.
 #define OW_ROCK_CLIMB_FIELD_MOVE        FALSE      // If enabled, Rock Climb can be used as a Field Move as seen in DPPt.
 #define OW_CHOOSE_FROM_PC_AND_PARTY     TRUE       // If enabled, NPCs like move tutors or trainers asking for trade will let you pick a pokemon from your PC or party instead of just your party
+#define OW_FAINTED_AUTOHEAL             TRUE       // If TRUE, fainted party Pokémon gradually recover HP over time in the overworld.
+#define OW_FAINTED_AUTOHEAL_TICK_FRAMES 600        // Frames between each auto-heal tick (600 = about 10 seconds at 60 FPS; use 300 for ~5 seconds).
+#define OW_FAINTED_AUTOHEAL_MAX_PERCENT 25         // Maximum HP percent auto-heal can recover up to.
+#define OW_FAINTED_AUTOHEAL_TICK_PERCENT 5         // HP percent restored each tick.
 
 // Item Obtain Description Box
 #define OW_ITEM_DESCRIPTIONS_OFF        0   // never show descriptions
