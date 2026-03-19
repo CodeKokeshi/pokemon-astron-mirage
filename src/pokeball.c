@@ -994,7 +994,8 @@ static void SpriteCB_MonSendOut_1(struct Sprite *sprite)
     u32 coordX = (isPlayer) ? BATTLER_COORD_X_2 : BATTLER_COORD_X;
     u32 coordY = (isPlayer) ? BATTLER_COORD_Y_PIC_OFFSET : BATTLER_COORD_Y;
 
-    sprite->data[0] = 25;
+    // Keep player sendout readable, but speed up opponent/wild sendout to match faster intro pacing.
+    sprite->data[0] = isPlayer ? 25 : 12;
     sprite->data[2] = GetBattlerSpriteCoord(sprite->sBattler, coordX);
     sprite->data[4] = GetBattlerSpriteCoord(sprite->sBattler, coordY) + 24;
     sprite->data[5] = -30;
@@ -1077,9 +1078,9 @@ static void SpriteCB_ReleaseMon2FromBall(struct Sprite *sprite)
 static void SpriteCB_OpponentMonSendOut(struct Sprite *sprite)
 {
     if (gTestRunnerHeadless)
-        sprite->data[0] = 15;
+        sprite->data[0] = 6;
     sprite->data[0]++;
-    if (sprite->data[0] > 15)
+    if (sprite->data[0] > 6)
     {
         sprite->data[0] = 0;
         if (IsDoubleBattle() && gBattleSpritesDataPtr->animationData->introAnimActive
