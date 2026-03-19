@@ -16,6 +16,7 @@
 #include "util.h"
 #include "gpu_regs.h"
 #include "battle_message.h"
+#include "battle_script_commands.h"
 #include "pokedex.h"
 #include "palette.h"
 #include "international_string_util.h"
@@ -23,6 +24,7 @@
 #include "battle_anim.h"
 #include "data.h"
 #include "pokemon_summary_screen.h"
+#include "party_menu.h"
 #include "strings.h"
 #include "battle_debug.h"
 #include "item.h"
@@ -203,6 +205,10 @@ static void Task_FreeAbilityPopUpGfx(u8);
 static void SpriteCB_LastUsedBall(struct Sprite *);
 static void SpriteCB_LastUsedBallWin(struct Sprite *);
 static void SpriteCB_MoveInfoWin(struct Sprite *sprite);
+static void UpdateLastUsedBallCatchRateText(void);
+
+static u8 sCatchRateWindowSpriteId;
+static u8 sCatchRateIconSpriteId;
 
 static const struct OamData sOamData_64x32 =
 {
@@ -689,6 +695,8 @@ u8 CreateBattlerHealthboxSprites(enum BattlerId battler)
     gBattleStruct->ballSpriteIds[0] = MAX_SPRITES;
     gBattleStruct->ballSpriteIds[1] = MAX_SPRITES;
     gBattleStruct->moveInfoSpriteId = MAX_SPRITES;
+    sCatchRateWindowSpriteId = MAX_SPRITES;
+    sCatchRateIconSpriteId = MAX_SPRITES;
 
     return healthboxLeftSpriteId;
 }
@@ -2386,6 +2394,8 @@ enum
     TAG_ABILITY_POP_UP_PLAYER2,
     TAG_ABILITY_POP_UP_OPPONENT2,
     TAG_LAST_BALL_WINDOW,
+    TAG_CATCH_RATE_WINDOW,
+    TAG_CATCH_RATE_ICON,
 };
 
 static const u32 sAbilityPopUpGfx[] = INCBIN_U32("graphics/battle_interface/ability_pop_up.4bpp");
@@ -2749,6 +2759,56 @@ static const struct SpriteTemplate sSpriteTemplate_LastUsedBallWindow =
     .callback = SpriteCB_LastUsedBallWin
 };
 
+static const struct OamData sOamData_CatchRateWindow =
+{
+    .y = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
+    .mosaic = 0,
+    .bpp = ST_OAM_4BPP,
+    .shape = SPRITE_SHAPE(32x16),
+    .x = 0,
+    .matrixNum = 0,
+    .size = SPRITE_SIZE(32x16),
+    .tileNum = 0,
+    .priority = 1,
+    .paletteNum = 0,
+    .affineParam = 0,
+};
+
+static const struct SpriteTemplate sSpriteTemplate_CatchRateWindow =
+{
+    .tileTag = TAG_CATCH_RATE_WINDOW,
+    .paletteTag = TAG_ABILITY_POP_UP,
+    .oam = &sOamData_CatchRateWindow,
+    .callback = SpriteCallbackDummy,
+};
+
+static const struct OamData sOamData_CatchRateIcon =
+{
+    .y = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
+    .mosaic = 0,
+    .bpp = ST_OAM_4BPP,
+    .shape = SPRITE_SHAPE(8x8),
+    .x = 0,
+    .matrixNum = 0,
+    .size = SPRITE_SIZE(8x8),
+    .tileNum = 0,
+    .priority = 1,
+    .paletteNum = 13,
+    .affineParam = 0,
+};
+
+static const struct SpriteTemplate sSpriteTemplate_CatchRateIcon =
+{
+    .tileTag = TAG_CATCH_RATE_ICON,
+    .paletteTag = TAG_NONE,
+    .oam = &sOamData_CatchRateIcon,
+    .callback = SpriteCallbackDummy,
+};
+
 #define MOVE_INFO_WINDOW_TAG 0xE722
 
 static const struct OamData sOamData_MoveInfoWindow =
@@ -2790,6 +2850,18 @@ static const struct SpriteSheet sSpriteSheet_LastUsedBallWindow =
     sLastUsedBallWindowGfx, sizeof(sLastUsedBallWindowGfx), TAG_LAST_BALL_WINDOW
 };
 
+static const u8 sCatchRateWindowGfx[(32 * 16) / 2] = {0};
+static const struct SpriteSheet sSpriteSheet_CatchRateWindow =
+{
+    sCatchRateWindowGfx, sizeof(sCatchRateWindowGfx), TAG_CATCH_RATE_WINDOW
+};
+
+static const u32 sCatchRateIconGfx[] = INCBIN_U32("graphics/dexnav/owned_icon.4bpp.smol");
+static const struct CompressedSpriteSheet sSpriteSheet_CatchRateIcon =
+{
+    sCatchRateIconGfx, (8 * 8) / 2, TAG_CATCH_RATE_ICON
+};
+
 #if B_MOVE_DESCRIPTION_BUTTON == R_BUTTON
 static const u8 sMoveInfoWindowGfx[] = INCBIN_U8("graphics/battle_interface/move_info_window_r.4bpp");
 #else
@@ -2809,6 +2881,24 @@ static const struct SpriteSheet sSpriteSheet_MoveInfoWindow =
 #define LAST_BALL_WIN_X_F       (LAST_USED_BALL_X_F - 0)
 #define LAST_BALL_WIN_X_0       (LAST_USED_BALL_X_0 - 0)
 #define LAST_USED_WIN_Y         (LAST_USED_BALL_Y - 8)
+
+#define CATCH_RATE_ANCHOR_X     218
+#define CATCH_RATE_ANCHOR_Y     8
+#define CATCH_RATE_WIN_X        (CATCH_RATE_ANCHOR_X - 12)
+#define CATCH_RATE_WIN_Y        (CATCH_RATE_ANCHOR_Y + 6)
+#define CATCH_RATE_ICON_X       (CATCH_RATE_ANCHOR_X)
+#define CATCH_RATE_ICON_Y       (CATCH_RATE_ANCHOR_Y)
+#define CATCH_RATE_TEXT_X       0
+#define CATCH_RATE_TEXT_Y       3
+#define CATCH_RATE_TEXT_W       32
+
+static const union TextColor sLastBallCatchRateTextColor =
+{
+    .background = 0,
+    .foreground = 1,
+    .shadow = 3,
+    .accent = 0,
+};
 
 #define sHide  data[0]
 #define sTimer  data[1]
@@ -2830,6 +2920,84 @@ bool32 CanThrowLastUsedBall(void)
         return FALSE;
 
     return TRUE;
+}
+
+static void DestroyCatchRateOverlay(void)
+{
+    if (sCatchRateWindowSpriteId != MAX_SPRITES)
+    {
+        DestroySprite(&gSprites[sCatchRateWindowSpriteId]);
+        sCatchRateWindowSpriteId = MAX_SPRITES;
+    }
+
+    if (sCatchRateIconSpriteId != MAX_SPRITES)
+    {
+        DestroySprite(&gSprites[sCatchRateIconSpriteId]);
+        sCatchRateIconSpriteId = MAX_SPRITES;
+    }
+
+    FreeSpriteTilesByTag(TAG_CATCH_RATE_WINDOW);
+    FreeSpriteTilesByTag(TAG_CATCH_RATE_ICON);
+}
+
+static void TryCreateCatchRateOverlay(void)
+{
+    if (!CanThrowLastUsedBall())
+        return;
+
+    LoadSpritePalette(&sSpritePalette_AbilityPopUp);
+    if (GetSpriteTileStartByTag(TAG_CATCH_RATE_WINDOW) == 0xFFFF)
+        LoadSpriteSheet(&sSpriteSheet_CatchRateWindow);
+    if (GetSpriteTileStartByTag(TAG_CATCH_RATE_ICON) == 0xFFFF)
+        LoadCompressedSpriteSheet(&sSpriteSheet_CatchRateIcon);
+
+    LoadPalette(gHeldItemPalette, OBJ_PLTT_ID(sOamData_CatchRateIcon.paletteNum), PLTT_SIZE_4BPP);
+
+    if (sCatchRateWindowSpriteId == MAX_SPRITES)
+    {
+        sCatchRateWindowSpriteId = CreateSprite(&sSpriteTemplate_CatchRateWindow,
+                                                CATCH_RATE_WIN_X,
+                                                CATCH_RATE_WIN_Y, 5);
+        gSprites[sCatchRateWindowSpriteId].data[1] = SPRITE_NONE;
+        gSprites[sCatchRateWindowSpriteId].data[2] = SPRITE_NONE;
+    }
+    gSprites[sCatchRateWindowSpriteId].invisible = FALSE;
+
+    if (sCatchRateIconSpriteId == MAX_SPRITES)
+    {
+        sCatchRateIconSpriteId = CreateSprite(&sSpriteTemplate_CatchRateIcon, CATCH_RATE_ICON_X, CATCH_RATE_ICON_Y, 1);
+        gSprites[sCatchRateIconSpriteId].x = CATCH_RATE_ICON_X;
+        gSprites[sCatchRateIconSpriteId].y = CATCH_RATE_ICON_Y;
+    }
+    gSprites[sCatchRateIconSpriteId].invisible = FALSE;
+}
+
+static void UpdateLastUsedBallCatchRateText(void)
+{
+    u32 chance;
+    u8 text[8];
+    u32 width;
+    u32 x;
+    enum BattlerId wildMonBattler;
+
+    if (!CanThrowLastUsedBall())
+        return;
+    if (sCatchRateWindowSpriteId == MAX_SPRITES)
+        return;
+
+    wildMonBattler = GetCatchingBattler();
+    chance = GetBallCaptureChancePercent(wildMonBattler, gBattlerAttacker, gBallToDisplay);
+    ConvertIntToDecimalStringN(text, chance, STR_CONV_MODE_LEFT_ALIGN, 3);
+    StringAppend(text, COMPOUND_STRING("%"));
+    width = GetStringWidth(FONT_SMALL, text, 0);
+
+    if (width >= CATCH_RATE_TEXT_W)
+        x = CATCH_RATE_TEXT_X;
+    else
+        x = CATCH_RATE_TEXT_X + ((CATCH_RATE_TEXT_W - width) / 2);
+
+    FillSpriteRectColor(sCatchRateWindowSpriteId, CATCH_RATE_TEXT_X, CATCH_RATE_TEXT_Y, CATCH_RATE_TEXT_W, 8, TEXT_COLOR_TRANSPARENT);
+    AddSpriteTextPrinterParameterized6(sCatchRateWindowSpriteId, FONT_SMALL, x, CATCH_RATE_TEXT_Y, 0, 0, sLastBallCatchRateTextColor, 0, text);
 }
 
 void TryAddLastUsedBallItemSprites(void)
@@ -2878,6 +3046,8 @@ void TryAddLastUsedBallItemSprites(void)
         gSprites[gBattleStruct->moveInfoSpriteId].sHide = TRUE;
         gLastUsedBallMenuPresent = TRUE;
     }
+    TryCreateCatchRateOverlay();
+    UpdateLastUsedBallCatchRateText();
     if (B_LAST_USED_BALL_CYCLE == TRUE)
         ArrowsChangeColorLastBallCycle(0); //Default the arrows to be invisible
 }
@@ -2885,10 +3055,12 @@ void TryAddLastUsedBallItemSprites(void)
 static void DestroyLastUsedBallWinGfx(struct Sprite *sprite)
 {
     FreeSpriteTilesByTag(TAG_LAST_BALL_WINDOW);
-    if (GetSpriteTileStartByTag(MOVE_INFO_WINDOW_TAG) == 0xFFFF)
+    if (GetSpriteTileStartByTag(MOVE_INFO_WINDOW_TAG) == 0xFFFF
+     && GetSpriteTileStartByTag(TAG_CATCH_RATE_WINDOW) == 0xFFFF)
         FreeSpritePaletteByTag(TAG_ABILITY_POP_UP);
     DestroySprite(sprite);
     gBattleStruct->ballSpriteIds[1] = MAX_SPRITES;
+    DestroyCatchRateOverlay();
 }
 
 static void DestroyLastUsedBallGfx(struct Sprite *sprite)
@@ -2926,7 +3098,8 @@ void TryToHideMoveInfoWindow(void)
 static void DestroyMoveInfoWinGfx(struct Sprite *sprite)
 {
     FreeSpriteTilesByTag(MOVE_INFO_WINDOW_TAG);
-    if (GetSpriteTileStartByTag(TAG_LAST_BALL_WINDOW) == 0xFFFF)
+    if (GetSpriteTileStartByTag(TAG_LAST_BALL_WINDOW) == 0xFFFF
+     && GetSpriteTileStartByTag(TAG_CATCH_RATE_WINDOW) == 0xFFFF)
         FreeSpritePaletteByTag(TAG_ABILITY_POP_UP);
     DestroySprite(sprite);
     gBattleStruct->moveInfoSpriteId = MAX_SPRITES;
@@ -3000,6 +3173,10 @@ static void TryHideOrRestoreLastUsedBall(u8 caseId)
             gSprites[gBattleStruct->ballSpriteIds[0]].sHide = TRUE;
         if (gBattleStruct->ballSpriteIds[1] != MAX_SPRITES)
             gSprites[gBattleStruct->ballSpriteIds[1]].sHide = TRUE;
+        if (sCatchRateWindowSpriteId != MAX_SPRITES)
+            gSprites[sCatchRateWindowSpriteId].invisible = TRUE;
+        if (sCatchRateIconSpriteId != MAX_SPRITES)
+            gSprites[sCatchRateIconSpriteId].invisible = TRUE;
         gLastUsedBallMenuPresent = FALSE;
         break;
     case 1: // restore
@@ -3007,7 +3184,9 @@ static void TryHideOrRestoreLastUsedBall(u8 caseId)
             gSprites[gBattleStruct->ballSpriteIds[0]].sHide = FALSE;
         if (gBattleStruct->ballSpriteIds[1] != MAX_SPRITES)
             gSprites[gBattleStruct->ballSpriteIds[1]].sHide = FALSE;
+        TryCreateCatchRateOverlay();
         gLastUsedBallMenuPresent = TRUE;
+        UpdateLastUsedBallCatchRateText();
         break;
     }
     if (B_LAST_USED_BALL_CYCLE == TRUE)
@@ -3113,6 +3292,7 @@ static void Task_BounceBall(u8 taskId)
 void SwapBallToDisplay(bool32 sameBall)
 {
     u8 taskId;
+    UpdateLastUsedBallCatchRateText();
     taskId = CreateTask(Task_BounceBall, 10);
     gTasks[taskId].sSameBall = sameBall;
 }

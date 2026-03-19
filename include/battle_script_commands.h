@@ -64,6 +64,7 @@ bool32 TryResetBattlerStatChanges(enum BattlerId battler);
 bool32 CanCamouflage(enum BattlerId battler);
 void StealTargetItem(enum BattlerId battlerStealer, enum BattlerId battlerItem);
 u8 GetCatchingBattler(void);
+u32 GetBallCaptureChancePercent(enum BattlerId wildMonBattler, enum BattlerId playerBattler, enum Item ballItem);
 bool32 ProteanTryChangeType(enum BattlerId battler, enum Ability ability, enum Move move, enum Type moveType);
 u8 GetFirstFaintedPartyIndex(enum BattlerId battler);
 void SaveBattlerTarget(enum BattlerId battler);
